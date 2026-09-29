@@ -16,17 +16,47 @@ def get_config_val(key: str, default=None):
     1. os.environ (from .env or environment variables)
     2. Streamlit secrets (st.secrets) if running within Streamlit Cloud
     """
-    val = os.getenv(key)
-    if val:
-        return val
+    # 1. Check environment variables (case-insensitive)
+    for candidate in (key, key.upper(), key.lower()):
+        val = os.getenv(candidate)
+        if val:
+            return val
 
-    # Try Streamlit secrets
+    # 2. Check Streamlit secrets
     try:
         import streamlit as st
-        if hasattr(st, "secrets") and key in st.secrets:
-            val = str(st.secrets[key])
-            os.environ[key] = val
-            return val
+        if hasattr(st, "secrets"):
+            # Direct keys (case-insensitive)
+            for candidate in (key, key.upper(), key.lower()):
+                if candidate in st.secrets:
+                    val = str(st.secrets[candidate]).strip()
+                    if val:
+                        os.environ[key] = val
+                        return val
+
+            # Nested sections (e.g., [openai] api_key = "...")
+            key_upper = key.upper()
+            if "OPENAI" in key_upper:
+                for section in ("openai", "OPENAI", "OpenAI"):
+                    if section in st.secrets:
+                        sec = st.secrets[section]
+                        for sub in ("api_key", "API_KEY", "key", "KEY"):
+                            if sub in sec:
+                                val = str(sec[sub]).strip()
+                                if val:
+                                    os.environ[key] = val
+                                    return val
+
+            if "PINECONE" in key_upper:
+                for section in ("pinecone", "PINECONE", "Pinecone"):
+                    if section in st.secrets:
+                        sec = st.secrets[section]
+                        for sub in ("api_key", "API_KEY", "index_name", "INDEX_NAME"):
+                            if sub in sec:
+                                val = str(sec[sub]).strip()
+                                if val:
+                                    os.environ[key] = val
+                                    return val
     except Exception:
         pass
 

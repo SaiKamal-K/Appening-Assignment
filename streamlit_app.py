@@ -8,8 +8,16 @@ Run with:
     streamlit run streamlit_app.py
 """
 
+import os
+import sys
+
+# Ensure repository root is on sys.path for robust module resolution
+_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _ROOT_DIR not in sys.path:
+    sys.path.insert(0, _ROOT_DIR)
+
 import streamlit as st
-from src.config import PINECONE_INDEX_NAME, validate_config
+from src.config import PINECONE_INDEX_NAME, validate_config, get_config_val
 from src.graph import build_rag_graph
 
 
@@ -64,18 +72,22 @@ st.markdown("""
 
 
 # ---------------------------------------------------------------------------
-# Initialize RAG Graph (cached for performance)
+# Initialize RAG Graph (cached on active credentials)
 # ---------------------------------------------------------------------------
 
 @st.cache_resource
-def get_rag_graph():
-    """Build and cache the RAG graph so it persists across Streamlit reruns."""
-    validate_config()
-    return build_rag_graph(index_name=PINECONE_INDEX_NAME)
+def get_rag_graph(cache_token: str):
+    """Build and cache the RAG graph keyed on active credentials."""
+    return build_rag_graph()
 
 
 try:
-    graph = get_rag_graph()
+    validate_config()
+    _o_key = get_config_val("OPENAI_API_KEY", "")
+    _p_key = get_config_val("PINECONE_API_KEY", "")
+    _idx = get_config_val("PINECONE_INDEX_NAME", PINECONE_INDEX_NAME)
+    _token = f"{_o_key[:10]}_{_p_key[:10]}_{_idx}"
+    graph = get_rag_graph(_token)
 except EnvironmentError as e:
     st.error(f"⚠️ Configuration Error: {e}")
     st.warning("Missing API Keys detected. If deploying on Streamlit Cloud, add your keys to Streamlit Secrets:")

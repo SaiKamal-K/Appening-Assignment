@@ -81,11 +81,22 @@ def build_rag_graph(index_name: str = PINECONE_INDEX_NAME):
     pinecone_key = get_config_val("PINECONE_API_KEY")
     target_index = index_name or get_config_val("PINECONE_INDEX_NAME", PINECONE_INDEX_NAME)
 
+    # Ensure environment variables are populated for all underlying SDKs
+    if openai_key:
+        os.environ["OPENAI_API_KEY"] = openai_key
+    if pinecone_key:
+        os.environ["PINECONE_API_KEY"] = pinecone_key
+
     # Initialize components with validated string API keys
     embeddings = OpenAIEmbeddings(
         model=EMBEDDING_MODEL,
         api_key=openai_key,
     )
+    # Guarantee sync client is present (prevents 'Sync client is not available' error)
+    if not getattr(embeddings, "client", None):
+        import openai
+        embeddings.client = openai.OpenAI(api_key=openai_key).embeddings
+
     vectorstore = PineconeVectorStore(
         index_name=target_index,
         embedding=embeddings,
