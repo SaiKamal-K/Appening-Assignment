@@ -78,7 +78,19 @@ try:
     graph = get_rag_graph()
 except EnvironmentError as e:
     st.error(f"⚠️ Configuration Error: {e}")
-    st.info("Please set `OPENAI_API_KEY` and `PINECONE_API_KEY` in your `.env` file or environment variables.")
+    st.warning("Missing API Keys detected. If deploying on Streamlit Cloud, add your keys to Streamlit Secrets:")
+    st.markdown("""
+    ### 🔑 Setting up Secrets on Streamlit Community Cloud:
+    1. In your Streamlit Cloud dashboard, open your app settings (**⋮** menu &rarr; **Settings**).
+    2. Go to the **Secrets** tab on the left.
+    3. Paste your credentials:
+    ```toml
+    OPENAI_API_KEY = "sk-proj-your-key-here"
+    PINECONE_API_KEY = "pcsk_your-key-here"
+    PINECONE_INDEX_NAME = "agentic-ai-index"
+    ```
+    4. Click **Save**. Your app will automatically reboot and start answering questions!
+    """)
     st.stop()
 except Exception as e:
     st.error(f"⚠️ Initialization Error: {e}")
