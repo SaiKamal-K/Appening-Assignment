@@ -8,6 +8,7 @@ This module defines:
 - build_rag_graph(): Assembles and compiles the LangGraph StateGraph.
 """
 
+import os
 from typing import List, TypedDict
 
 from langgraph.graph import StateGraph, START, END
