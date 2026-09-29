@@ -26,8 +26,6 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 
 from src.config import (
-    OPENAI_API_KEY,
-    PINECONE_API_KEY,
     PINECONE_INDEX_NAME,
     PINECONE_DIMENSION,
     PINECONE_METRIC,
@@ -36,6 +34,7 @@ from src.config import (
     CHUNK_OVERLAP,
     PDF_PATH,
     validate_config,
+    get_config_val,
 )
 
 
@@ -97,7 +96,8 @@ def ensure_pinecone_index(index_name: str = PINECONE_INDEX_NAME):
     Args:
         index_name: Name of the Pinecone index to create or verify.
     """
-    pc = Pinecone(api_key=PINECONE_API_KEY)
+    pinecone_key = get_config_val("PINECONE_API_KEY")
+    pc = Pinecone(api_key=pinecone_key)
     
     # Safely extract existing index names across different Pinecone SDK versions
     raw_indexes = pc.list_indexes()
@@ -143,12 +143,14 @@ def upsert_to_pinecone(chunks, index_name: str = PINECONE_INDEX_NAME):
         PineconeVectorStore instance connected to the populated index.
     """
     print(f"[Ingestion] Generating embeddings and upserting {len(chunks)} chunks to Pinecone...")
-    embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL, api_key=OPENAI_API_KEY)
+    openai_key = get_config_val("OPENAI_API_KEY")
+    pinecone_key = get_config_val("PINECONE_API_KEY")
+    embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL, api_key=openai_key)
     vector_store = PineconeVectorStore.from_documents(
         documents=chunks,
         embedding=embeddings,
         index_name=index_name,
-        pinecone_api_key=PINECONE_API_KEY,
+        pinecone_api_key=pinecone_key,
     )
     print("[Ingestion] Upsert complete.")
     return vector_store

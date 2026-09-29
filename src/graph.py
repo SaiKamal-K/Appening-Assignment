@@ -15,14 +15,13 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 
 from src.config import (
-    OPENAI_API_KEY,
-    PINECONE_API_KEY,
     PINECONE_INDEX_NAME,
     EMBEDDING_MODEL,
     LLM_MODEL,
     LLM_TEMPERATURE,
     RETRIEVER_TOP_K,
     validate_config,
+    get_config_val,
 )
 
 
@@ -78,21 +77,25 @@ def build_rag_graph(index_name: str = PINECONE_INDEX_NAME):
     """
     validate_config()
 
-    # Initialize components with explicit API keys
+    openai_key = get_config_val("OPENAI_API_KEY")
+    pinecone_key = get_config_val("PINECONE_API_KEY")
+    target_index = index_name or get_config_val("PINECONE_INDEX_NAME", PINECONE_INDEX_NAME)
+
+    # Initialize components with validated string API keys
     embeddings = OpenAIEmbeddings(
         model=EMBEDDING_MODEL,
-        api_key=OPENAI_API_KEY,
+        api_key=openai_key,
     )
     vectorstore = PineconeVectorStore(
-        index_name=index_name,
+        index_name=target_index,
         embedding=embeddings,
-        pinecone_api_key=PINECONE_API_KEY,
+        pinecone_api_key=pinecone_key,
     )
     retriever = vectorstore.as_retriever(search_kwargs={"k": RETRIEVER_TOP_K})
     llm = ChatOpenAI(
         model=LLM_MODEL,
         temperature=LLM_TEMPERATURE,
-        api_key=OPENAI_API_KEY,
+        api_key=openai_key,
     )
 
     # ------------------------------------------------------------------

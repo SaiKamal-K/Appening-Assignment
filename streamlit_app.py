@@ -180,21 +180,29 @@ if user_query := st.chat_input("Ask a question about Agentic AI..."):
                 "answer": "",
                 "score": 0.0,
             }
-            result = graph.invoke(initial_state)
+            try:
+                result = graph.invoke(initial_state)
 
-            answer = result["answer"]
-            context = result["context"]
-            score = result["score"]
+                answer = result["answer"]
+                context = result["context"]
+                score = result["score"]
 
-            # Update sidebar state
-            st.session_state.last_context = context
-            st.session_state.last_score = score
+                # Update sidebar state
+                st.session_state.last_context = context
+                st.session_state.last_score = score
 
-            # Display answer
-            st.markdown(answer)
+                # Display answer
+                st.markdown(answer)
 
-            # Show inline confidence
-            st.caption(f"📊 Confidence: {score:.0%} · 📄 {len(context)} chunks retrieved")
-
-    st.session_state.messages.append({"role": "assistant", "content": answer})
-    st.rerun()
+                # Show inline confidence
+                st.caption(f"📊 Confidence: {score:.0%} · 📄 {len(context)} chunks retrieved")
+                st.session_state.messages.append({"role": "assistant", "content": answer})
+                st.rerun()
+            except Exception as e:
+                err_text = str(e)
+                if "insufficient_quota" in err_text or "credit_balance_exhausted" in err_text:
+                    st.error("⚠️ **OpenAI Quota Limit:** Your OpenAI account has exhausted its available credits. Please check your billing at [platform.openai.com](https://platform.openai.com/settings/organization/billing/).")
+                elif "unauthorized" in err_text.lower() or "401" in err_text:
+                    st.error("⚠️ **Authentication Error:** Invalid API Key provided for OpenAI or Pinecone. Please verify your keys in Streamlit Secrets.")
+                else:
+                    st.error(f"⚠️ **Error:** {err_text}")
