@@ -1,5 +1,7 @@
 # 🤖 RAG Agentic AI Chatbot
 
+## Live at: https://appening-assignment-d3wx4rabbvk46udoqp8qrl.streamlit.app/
+
 A **Retrieval-Augmented Generation (RAG)** chatbot that answers questions strictly grounded in the [Agentic AI eBook](https://drive.google.com/file/d/15VLphKcY23_fpYxN62UEQRri_psRVfP9/view?usp=sharing). Built with **LangGraph**, **Pinecone**, **OpenAI**, and **FastAPI** / **Streamlit**.
 
 ---
